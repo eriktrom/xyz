@@ -1,0 +1,523 @@
+# Note: ES_HEAP_SIZE should be half your ram. leave the other half for lucene!
+# Rembmer, this is **per node** so if you start 4 nodes @ 1g each, thats 4g
+# Also, never go over 32g (<=30g is a safe bet)
+
+# installed plugins
+# https://github.com/elastic/elasticsearch-analysis-icu
+# https://github.com/elastic/elasticsearch-mapper-attachments#mapper-attachments-type-for-elasticsearch
+# https://github.com/elastic/elasticsearch-cloud-aws#s3-repository
+
+# To make a quick backup for testing or playground purposes:
+# use https://github.com/elastic/stream2es
+
+## See https://www.elastic.co/guide/en/elasticsearch/reference/current/url-access-control.html
+## Setting this to false will make logstash barf when trying to clone a cluster
+# Disable this after if curator works differently than logstash for migrating an
+# index or I write my own scan & scroll + write new index mapping module in Node
+# HAVING THIS BE TRUE BY DEFAULT IS NOT SECURE
+# in 2.x shield may help, or of course isolating behind a proxy solves all problems ;)
+#
+# rest.action.multi.allow_explicit_index: false
+
+# TODO: Does not currently work or I'm just really lucky and it's never been triggered
+# Oddly though, unlike logstash, no security notice has come through. Ever.
+# Needs some TLC as it was thrown in when found while looking for another topic
+#
+# watcher.actions.email.service.account:
+#     gmail_account:
+#         profile: gmail
+#         smtp:
+#             auth: true
+#             starttls.enable: true
+#             host: smtp.gmail.com
+#             port: 587
+#             user: ${ES__WATCHER_GMAIL_USER}
+#             password: ${ES__WATCHER_GMAIL_PASSWORD}
+
+# TODO:
+# - for backups use better setup found at https://github.com/elastic/elasticsearch-cloud-aws#s3-repository
+# - also, in order to change these settings on a running multinode cluster, use the
+#   http API (if possible)
+
+##################### Elasticsearch Configuration Example #####################
+
+# This file contains an overview of various configuration settings,
+# targeted at operations staff. Application developers should
+# consult the guide at <http://elasticsearch.org/guide>.
+#
+# The installation procedure is covered at
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/setup.html>.
+#
+# Elasticsearch comes with reasonable defaults for most settings,
+# so you can try it out without bothering with configuration.
+#
+# Most of the time, these defaults are just fine for running a production
+# cluster. If you're fine-tuning your cluster, or wondering about the
+# effect of certain configuration option, please _do ask_ on the
+# mailing list or IRC channel [http://elasticsearch.org/community].
+
+# Any element in the configuration can be replaced with environment variables
+# by placing them in ${...} notation. For example:
+#
+# node.rack: ${RACK}
+
+# For information on supported formats and syntax for the config file, see
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/setup-configuration.html>
+
+
+################################### Cluster ###################################
+
+# Cluster name identifies your cluster for auto-discovery. If you're running
+# multiple clusters on the same network, make sure you're using unique names.
+#
+## Set using Chef(staging) or Makefile(dev)
+# cluster.name: 'set me on startup, we must all know the same name to connect without multicast when more than one node per machine'
+
+
+#################################### Node #####################################
+
+
+# EXTREMELY IMPORTANT:
+# https://www.elastic.co/guide/en/elasticsearch/guide/current/_important_configuration_changes.html#_minimum_master_nodes
+#
+## Number of Nodes and shards dealio:
+#
+# The number of master nodes should be a quorum(majority) of your nodes
+# to prevent split brain(2 master nodes in a cluster who think their in charge)
+#
+# master-eligible-nodes/2 + 1
+#
+# DO NOTE ALLOW THERE TO BE 2 MASTER NODES WHEN THERE ARE ONLY 2 NODES PERIOD.
+# I WILL HATE LIFE. THIS IS THE GOLDEN RULE.
+
+# Node names are generated dynamically on startup, so you're relieved
+# from configuring them manually. You can tie this node to a specific name:
+#
+
+# When only running a single node for a cluster per machine, then set this to
+# the env variable ${HOSTNAME}
+# TODO: name me explicity or make sure the hostname's of my VM's are aware of this
+# in reality, name this
+node.name: ${HOSTNAME}
+
+# Every node can be configured to allow or deny being eligible as the master,
+# and to allow or deny to store the data.
+#
+# Allow this node to be eligible as a master node (enabled by default):
+#
+#node.master: true
+#
+# Allow this node to store data (enabled by default):
+#
+#node.data: true
+
+# You can exploit these settings to design advanced cluster topologies.
+#
+# 1. You want this node to never become a master node, only to hold data.
+#    This will be the "workhorse" of your cluster.
+#
+#node.master: false
+#node.data: true
+#
+# 2. You want this node to only serve as a master: to not store any data and
+#    to have free resources. This will be the "coordinator" of your cluster.
+#
+#node.master: true
+#node.data: false
+#
+# 3. You want this node to be neither master nor data node, but
+#    to act as a "search load balancer" (fetching data from nodes,
+#    aggregating results, etc.)
+#
+#node.master: false
+#node.data: false
+
+# Use the Cluster Health API [http://localhost:9200/_cluster/health], the
+# Node Info API [http://localhost:9200/_nodes] or GUI tools
+# such as <http://www.elasticsearch.org/overview/marvel/>,
+# <http://github.com/karmi/elasticsearch-paramedic>,
+# <http://github.com/lukas-vlcek/bigdesk> and
+# <http://mobz.github.com/elasticsearch-head> to inspect the cluster state.
+
+# A node can have generic attributes associated with it, which can later be used
+# for customized shard allocation filtering, or allocation awareness. An attribute
+# is a simple key value pair, similar to node.key: value, here is an example:
+#
+# This can also be set on the command line with --node.rack_id=blah
+# node.rack_id: ${ES__NODE_RACK_ID}
+
+# By default, multiple nodes are allowed to start from the same installation location
+# to disable it, set the following:
+node.max_local_storage_nodes: 1 # prevents footgun when hacking late night on local machine
+
+
+#################################### Index ####################################
+
+# You can set a number of options (such as shard/replica options, mapping
+# or analyzer definitions, translog settings, ...) for indices globally,
+# in this file.
+#
+# Note, that it makes more sense to configure index settings specifically for
+# a certain index, either when creating it or by using the index templates API.
+#
+# See <http://elasticsearch.org/guide/en/elasticsearch/reference/current/index-modules.html> and
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/indices-create-index.html>
+# for more information.
+
+# Set the number of shards (splits) of an index (5 by default):
+#
+# index.number_of_shards: 1
+
+# Set the number of replicas (additional copies) of an index (1 by default):
+#
+# index.number_of_replicas: 1
+
+# Note, that for development on a local machine, with small indices, it usually
+# makes sense to "disable" the distributed features:
+#
+index.number_of_shards: 1
+index.number_of_replicas: 0
+
+# These settings directly affect the performance of index and search operations
+# in your cluster. Assuming you have enough machines to hold shards and
+# replicas, the rule of thumb is:
+#
+# 1. Having more *shards* enhances the _indexing_ performance and allows to
+#    _distribute_ a big index across machines.
+# 2. Having more *replicas* enhances the _search_ performance and improves the
+#    cluster _availability_.
+#
+# The "number_of_shards" is a one-time setting for an index.
+#
+# The "number_of_replicas" can be increased or decreased anytime,
+# by using the Index Update Settings API.
+#
+# Elasticsearch takes care about load balancing, relocating, gathering the
+# results from nodes, etc. Experiment with different settings to fine-tune
+# your setup.
+
+# Use the Index Status API (<http://localhost:9200/A/_status>) to inspect
+# the index status.
+
+
+#################################### Paths ####################################
+
+# Path to directory containing configuration (this file and logging.yml):
+#
+#path.conf: /path/to/conf
+
+# Path to directory where to store index data allocated for this node.
+#
+path.data: ./es/data
+#
+# Can optionally include more than one location, causing data to be striped across
+# the locations (a la RAID 0) on a file level, favouring locations with most free
+# space on creation. For example:
+#
+#path.data: /path/to/data1,/path/to/data2
+
+# Path to temporary files:
+#
+#path.work: /path/to/work
+
+# Path to log files:
+#
+path.logs: ./es/log
+
+# Path to where plugins are installed:
+#
+
+# TODO: plugins should not be stored in the global installation, which there
+# not in homebrew, but needs to be considered for the server
+
+# FIXME for production
+path.plugins: /usr/local/var/lib/elasticsearch/plugins
+
+
+#################################### Plugin ###################################
+
+# If a plugin listed here is not installed for current node, the node will not start.
+#
+# plugin.mandatory: mapper-attachments,lang-groovy
+
+
+################################### Memory ####################################
+
+# Elasticsearch performs poorly when JVM starts swapping: you should ensure that
+# it _never_ swaps.
+#
+# Set this property to true to lock the memory:
+#
+# Also, read this when moving to a non mac book pro:
+#
+#
+bootstrap.mlockall: true
+
+# Make sure that the ES_MIN_MEM and ES_MAX_MEM environment variables are set
+# to the same value, and that the machine has enough memory to allocate
+# for Elasticsearch, leaving enough memory for the operating system itself.
+#
+# You should also make sure that the Elasticsearch process is allowed to lock
+# the memory, eg. by using `ulimit -l unlimited`.
+
+
+# From https://www.elastic.co/guide/en/elasticsearch/guide/current/_limiting_memory_usage.html
+
+
+## These need some settings, see the above blog article and this video:
+## https://www.elastic.co/webinars/es-at-scale?baymax=rtp&elektra=videos&storm=video2&iesrc=ctr
+
+# Doc Value Optimizations
+# https://www.elastic.co/blog/support-in-the-wild-my-biggest-elasticsearch-problem-at-scale
+#
+# This is crucial for running on low memory on a low cost VM's, despite the article title
+#
+# We want doc values be set to true for fields in each index that are not analyzed
+# as tokens in the inverted index. This is all fields used for aggregations, count
+# and scripting, except significant terms aggregation -
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations-bucket-significantterms-aggregation.html
+# https://www.elastic.co/guide/en/elasticsearch/guide/current/_limiting_memory_usage.html
+#
+# Doc values are default in >= 2.x.x
+indices.fielddata.cache.size: 40%
+# could be 5% - FAIL FAST, handle this inside application
+# this allows file system cache optimization
+#
+# TURN ME ON WHEN MIGRATING TO 2.0 beta and re-indexing
+# --- XXX --- USE ME BRO --- XXX ---
+
+# BE CAREFUL BRO
+# TO QUOTE THE DOCS:
+#
+# The relationship between indices.fielddata.cache.size and
+# indices.breaker.fielddata.limit is an important one. If the circuit-breaker
+# limit is lower than the cache size, no data will ever be evicted. In order for
+# it to work properly, the circuit breaker limit must be higher than the cache
+# size.
+#
+# indices.breaker.fielddata.limit: 10% # 60% by default
+#
+# I'm not sure what to set these too. Got interrupted while researching
+# That said, may want to ask on IRC b/c not sure there was a direct obvious answer
+#
+# indices.breaker.request.limit: 40% # default
+# indices.breaker.total.limit: 70% # default
+
+
+############################## Network And HTTP ###############################
+
+# Elasticsearch, by default, binds itself to the 0.0.0.0 address, and listens
+# on port [9200-9300] for HTTP traffic and on port [9300-9400] for node-to-node
+# communication. (the range means that if the port is busy, it will automatically
+# try the next port).
+
+# Set the bind address specifically (IPv4 or IPv6):
+#
+#network.bind_host: 192.168.0.1
+
+# Set the address other nodes will use to communicate with this node. If not
+# set, it is automatically derived. It must point to an actual IP address.
+#
+#network.publish_host: 192.168.0.1
+
+# Set both 'bind_host' and 'publish_host':
+#
+# can also be set via command line flag
+# network.host: 127.0.0.1
+
+# Set a custom port for the node to node communication (9300 by default):
+#
+#transport.tcp.port: 9300
+
+# Enable compression for all communication between nodes (disabled by default):
+#
+# This compression setting was in this file, the next in the docs, we use both
+# until we have time to work it out
+transport.tcp.compress: true
+## found at 'https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-http.html'
+http.compression: true
+
+# Set a custom port to listen for HTTP traffic:
+#
+# http.port: 9200
+
+# Set a custom allowed content length:
+#
+#http.max_content_length: 100mb
+
+# Disable HTTP completely:
+#
+#http.enabled: false
+
+# For sense console usage directly from links within es book
+# http.cors.enabled: true
+# http.cors.allow-origin: /https?:\/\/(www.)?elastic.co/
+
+
+################################### Gateway ###################################
+
+# The gateway allows for persisting the cluster state between full cluster
+# restarts. Every change to the state (such as adding an index) will be stored
+# in the gateway, and when the cluster starts up for the first time,
+# it will read its state from the gateway.
+
+# There are several types of gateway implementations. For more information, see
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/modules-gateway.html>.
+
+# The default gateway type is the "local" gateway (recommended):
+#
+gateway.type: local
+
+# Settings below control how and when to start the initial recovery process on
+# a full cluster restart (to reuse as much local data as possible when using shared
+# gateway).
+
+# TODO: the following settins will prevent shard thrashing if done properly
+# turning hours into seconds while nodes f around with rebalancing when they
+# could have just waited for the missing node to come back online.
+#
+# Also, in the case where the node goes offline on purpose, we'd want to intervene
+
+# Allow recovery process after N nodes in a cluster are up:
+# 1) --
+# gateway.recover_after_nodes: 1
+
+# Set the timeout to initiate the recovery process, once the N nodes
+# from previous setting are up (accepts time value):
+# 2) --
+# gateway.recover_after_time: 5m
+
+# Set how many nodes are expected in this cluster. Once these N nodes
+# are up (and recover_after_nodes is met), begin recovery process immediately
+# (without waiting for recover_after_time to expire):
+# 3) --
+# gateway.expected_nodes: 1
+
+
+############################# Recovery Throttling #############################
+
+# These settings allow to control the process of shards allocation between
+# nodes during initial recovery, replica allocation, rebalancing,
+# or when adding and removing nodes.
+
+# Set the number of concurrent recoveries happening on a node:
+#
+# 1. During the initial recovery
+#
+#cluster.routing.allocation.node_initial_primaries_recoveries: 4
+#
+# 2. During adding/removing nodes, rebalancing, etc
+#
+#cluster.routing.allocation.node_concurrent_recoveries: 2
+
+# Set to throttle throughput when recovering (eg. 100mb, by default 20mb):
+#
+#indices.recovery.max_bytes_per_sec: 20mb
+
+# Set to limit the number of open concurrent streams when
+# recovering a shard from a peer:
+#
+#indices.recovery.concurrent_streams: 5
+
+
+################################## Discovery ##################################
+
+# Discovery infrastructure ensures nodes can be found within a cluster
+# and master node is elected. Multicast discovery is the default.
+
+# Set to ensure a node sees N other master eligible nodes to be considered
+# operational within the cluster. This should be set to a quorum/majority of
+# the master-eligible nodes in the cluster.
+#
+# TODO: use the hot/warm architecture if enabling this setting
+# discovery.zen.minimum_master_nodes: 2
+
+# Set the time to wait for ping responses from other nodes when discovering.
+# Set this option to a higher value on a slow or congested network
+# to minimize discovery failures:
+#
+#discovery.zen.ping.timeout: 3s
+
+# For more information, see
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/modules-discovery-zen.html>
+
+# Unicast discovery allows to explicitly control which nodes will be used
+# to discover the cluster. It can be used when multicast is not present,
+# or to restrict the cluster communication-wise.
+#
+# 1. Disable multicast discovery (enabled by default in 1.7, disabled by default in >= 2.x):
+#
+discovery.zen.ping.multicast.enabled: false
+#
+# 2. Configure an initial list of master nodes in the cluster
+#    to perform discovery when new nodes (master or data) are started:
+#
+
+# In 2.0 multicast has been moved to a plugin
+# New default in 2.0 is to ping first 5 ports on localhost
+#
+# TODO: for multi VM nodes, this will need to be updated via the
+# http api once all nodes needed are booted and I know their internal ip addresses
+discovery.zen.ping.unicast.hosts: [
+    "localhost:9200",
+    "localhost:9201"
+]
+
+# EC2 discovery allows to use AWS EC2 API in order to perform discovery.
+#
+# You have to install the cloud-aws plugin for enabling the EC2 discovery.
+#
+# For more information, see
+# <http://elasticsearch.org/guide/en/elasticsearch/reference/current/modules-discovery-ec2.html>
+#
+# See <http://elasticsearch.org/tutorials/elasticsearch-on-ec2/>
+# for a step-by-step tutorial.
+
+# GCE discovery allows to use Google Compute Engine API in order to perform discovery.
+#
+# You have to install the cloud-gce plugin for enabling the GCE discovery.
+#
+# For more information, see <https://github.com/elasticsearch/elasticsearch-cloud-gce>.
+
+# Azure discovery allows to use Azure API in order to perform discovery.
+#
+# You have to install the cloud-azure plugin for enabling the Azure discovery.
+#
+# For more information, see <https://github.com/elasticsearch/elasticsearch-cloud-azure>.
+
+################################## Slow Log ##################################
+
+# Shard level query and fetch threshold logging.
+
+#index.search.slowlog.threshold.query.warn: 10s
+#index.search.slowlog.threshold.query.info: 5s
+#index.search.slowlog.threshold.query.debug: 2s
+#index.search.slowlog.threshold.query.trace: 500ms
+
+#index.search.slowlog.threshold.fetch.warn: 1s
+#index.search.slowlog.threshold.fetch.info: 800ms
+#index.search.slowlog.threshold.fetch.debug: 500ms
+#index.search.slowlog.threshold.fetch.trace: 200ms
+
+#index.indexing.slowlog.threshold.index.warn: 10s
+#index.indexing.slowlog.threshold.index.info: 5s
+#index.indexing.slowlog.threshold.index.debug: 2s
+#index.indexing.slowlog.threshold.index.trace: 500ms
+
+################################## GC Logging ################################
+
+#monitor.jvm.gc.young.warn: 1000ms
+#monitor.jvm.gc.young.info: 700ms
+#monitor.jvm.gc.young.debug: 400ms
+
+#monitor.jvm.gc.old.warn: 10s
+#monitor.jvm.gc.old.info: 5s
+#monitor.jvm.gc.old.debug: 2s
+
+################################## Security ################################
+
+# Uncomment if you want to enable JSONP as a valid return transport on the
+# http server. With this enabled, it may pose a security risk, so disabling
+# it unless you need it is recommended (it is disabled by default).
+#
+#http.jsonp.enable: true

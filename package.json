@@ -1,0 +1,47 @@
+{
+  "name": "xyz",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eriktrom/xyz.git"
+  },
+  "keywords": [],
+  "author": "Erik Trom",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eriktrom/xyz/issues"
+  },
+  "files": [
+    "lib"
+  ],
+  "homepage": "https://github.com/eriktrom/xyz#readme",
+  "dependencies": {
+    "bluebird": "2.x.x",
+    "boom": "2.x.x",
+    "dotenv": "1.x.x",
+    "elasticsearch": "^8.1.0",
+    "heapdump": "^0.3.7",
+    "hoek": "2.x.x",
+    "joi": "6.x.x",
+    "lodash": "3.x.x",
+    "mkdirp": "^0.5.1",
+    "winston": "1.x.x",
+    "wreck": "6.x.x",
+    "ws": "^0.8.0"
+  },
+  "devDependencies": {
+    "babel": "5.x.x",
+    "babel-eslint": "^4.1.3",
+    "code": "1.x.x",
+    "cucumber": "^0.5.3",
+    "eslint": "1.x.x",
+    "eslint-config-hapi": "2.x.x",
+    "eslint-plugin-babel": "2.x.x",
+    "eslint-plugin-hapi": "1.x.x",
+    "lab": "6.x.x",
+    "nodemon": "^1.5.1"
+  }
+}

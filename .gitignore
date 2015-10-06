@@ -1,0 +1,8 @@
+node_modules
+coverage.html
+cassettes
+.env
+es
+!*/**/es
+log
+.idea

@@ -1,0 +1,3 @@
+[submodule "rack-vcr-proxy"]
+	path = rack-vcr-proxy
+	url = ./rack-vcr-proxy/

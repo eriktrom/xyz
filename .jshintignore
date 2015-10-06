@@ -1,0 +1,9 @@
+node_modules/*
+**/vendor/*.js
+lib/*
+test/*
+features/*
+es/*
+log/*
+logstash/*
+rack-vcr-proxy/*
