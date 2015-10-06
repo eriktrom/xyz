@@ -18,10 +18,6 @@ var _logger = require('../../logger');
 
 var _logger2 = _interopRequireDefault(_logger);
 
-var _config = require('../../config');
-
-var _config2 = _interopRequireDefault(_config);
-
 var _es = require('../../es');
 
 var _es2 = _interopRequireDefault(_es);

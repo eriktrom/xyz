@@ -3,14 +3,10 @@ import Lab from 'lab'
 import Config from '../../lib/config'
 
 export const lab = Lab.script();
-const [describe, expect, it] = [lab.experiment, Code.expect, lab.test]
+const [,, describe, , expect, it] =
+  [lab.afterEach,lab.afterEach, lab.experiment, lab.experiment, Code.expect, lab.test]
 
 describe('Config', () => {
-
-  it('should have slack teams', done => {
-    expect(Object.keys(Config.types.slack).length > 0).to.equal(true)
-    done()
-  })
 
   it('should provide a log directory', done => {
     expect(Config.logDir).to.contain('log')
@@ -21,5 +17,7 @@ describe('Config', () => {
     expect(Config.esLogPath).to.contain('test.elasticsearch.log')
     done()
   })
+
+  it(`TEST TODO: it should show a descriptive error when teams.json does not exist`)
 
 });
