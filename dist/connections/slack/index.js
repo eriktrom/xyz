@@ -1,3 +1,4 @@
+/* $lab:coverage:off$ */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -21,6 +22,8 @@ var _socket2 = _interopRequireDefault(_socket);
 var _http = require('./http');
 
 var _http2 = _interopRequireDefault(_http);
+
+/* $lab:coverage:on$ */
 
 exports['default'] = {
   start: function start() {

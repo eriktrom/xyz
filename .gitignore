@@ -1,5 +1,5 @@
 node_modules
-coverage.html
+# coverage.html
 cassettes
 .env
 es
