@@ -9,7 +9,7 @@ export default function() {
   });
 
   this.When(/^I save channel history for all channels$/, function () {
-    return this.slackHttpClient.getAllChannelHistory({delay: 1})
+    return this.slackHttpClient.getAllChannelHistory({delay: 20000})
       .then(this.utils.log(true))
   });
 }
