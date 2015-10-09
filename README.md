@@ -4,7 +4,11 @@
 
     $ brew install elasticsearch
 
+    $ bundle install
+
     $ make elasticsearch-start
+
+    $ make redis-start
 
     $ make start
 
