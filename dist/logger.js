@@ -14,8 +14,10 @@ var _config = require('./config');
 
 var _config2 = _interopRequireDefault(_config);
 
+require('winston-redis');
+
 var Logger = new _winston2['default'].Logger({
-  transports: [new _winston2['default'].transports.Console({ level: 'log' }), new _winston2['default'].transports.File({ filename: _config2['default'].winstonLogPath, level: 'debug' })]
+  transports: [new _winston2['default'].transports.Console({ level: 'log' }), new _winston2['default'].transports.Redis({ level: 'debug', length: 0, container: 'xyz' }), new _winston2['default'].transports.File({ filename: _config2['default'].winstonLogPath, level: 'debug' })]
 });
 
 exports['default'] = Logger;

@@ -29,6 +29,7 @@
     "lodash": "3.x.x",
     "mkdirp": "^0.5.1",
     "winston": "1.x.x",
+    "winston-redis": "^1.0.0",
     "wreck": "6.x.x",
     "ws": "^0.8.0"
   },

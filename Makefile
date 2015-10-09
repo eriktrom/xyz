@@ -17,6 +17,7 @@ start:
 
 
 
+
 cucumber-wip:
 	NODE_ENV=cucumber ./node_modules/.bin/babel-node ./node_modules/.bin/cucumber.js --tags @wip --require ./features/support/env.js
 
@@ -38,4 +39,9 @@ es-start:
 	ES_HEAP_SIZE=512m dotenv elasticsearch -Xmx512m -Xms512m --cluster.name=elasticsearch-clifford --network.host=127.0.0.1 --config=./elasticsearch.yml
 
 
-.PHONY: test build start auto-test cucumber-wip cucumber-all cucumber-auto-all cucumber-auto es-start-test es-start
+redis-start:
+	mkdir -p ./redis && redis-server redis.conf
+
+
+
+.PHONY: test build start auto-test cucumber-wip cucumber-all cucumber-auto-all cucumber-auto es-start-test es-start redis-start
