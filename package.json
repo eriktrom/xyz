@@ -24,7 +24,7 @@
     "dotenv": "1.x.x",
     "elasticsearch": "^8.1.0",
     "heapdump": "^0.3.7",
-    "hoek": "2.x.x",
+    "hoek": "6.x.x",
     "joi": "6.x.x",
     "lodash": "3.x.x",
     "mkdirp": "^0.5.1",
